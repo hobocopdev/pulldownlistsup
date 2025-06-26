@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Floating Pulldown Assistant",
+  "version": "1.2",
+  "description": "在网页上悬浮选择 pulldown 选项的小工具",
+  "permissions": ["scripting", "activeTab"],
+  "action": {
+    "default_title": "启用悬浮窗口"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [{
+    "resources": ["overlay.html", "overlay.js", "overlay.css"],
+    "matches": ["<all_urls>"]
+  }]
+}
