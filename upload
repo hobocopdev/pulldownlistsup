@@ -1,3 +1,6 @@
+
+把这段加入你原来 func: (selectedText) => { ... } 里的对应位置：
+
 if (number) {
   const formatted = `${number.slice(0, 3)}-${number.slice(3, 7)}-${number.slice(7)}`;
   
