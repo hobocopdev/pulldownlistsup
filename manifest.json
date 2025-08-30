@@ -1,17 +1,41 @@
 {
   "manifest_version": 3,
-  "name": "Floating Pulldown Assistant",
-  "version": "1.2",
-  "description": "在网页上悬浮选择 pulldown 选项的小工具",
-  "permissions": ["scripting", "activeTab"],
-  "action": {
-    "default_title": "启用悬浮窗口"
-  },
+  "name": "スタンプ挿入ツール（浮かぶUI付き）",
+  "version": "1.0.3",
+  "description": "ショートカットキーでタイムスタンプ＋テキストを挿入。UIで直接編集可能。",
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },
-  "web_accessible_resources": [{
-    "resources": ["overlay.html", "overlay.js", "overlay.css"],
-    "matches": ["<all_urls>"]
-  }]
+  "commands": {
+    "insert-stamp": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
+      },
+      "description": "スタンプを挿入"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "contentScript.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "スタンプ設定"
+  }
 }
