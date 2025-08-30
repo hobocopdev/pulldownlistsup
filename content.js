@@ -1,41 +1,88 @@
 
-function insertInputNextToSelect(select) {
-  if (select.dataset._hasAutoSelector) return; // 避免重复插入
-  select.dataset._hasAutoSelector = "1";
+function insertGlobalInput() {
+  if (document.getElementById("pulldown-auto-input")) return;
 
   const input = document.createElement("input");
-  input.placeholder = "输入后自动选择下拉项";
-  input.style.marginLeft = "8px";
-  input.style.padding = "4px";
-  input.style.fontSize = "14px";
-  input.style.border = "1px solid #ccc";
-  input.style.borderRadius = "4px";
+  input.id = "pulldown-auto-input";
+  input.placeholder = "子項目を入力（例：池袋）";
+  Object.assign(input.style, {
+    position: "fixed",
+    top: "10px",
+    right: "10px",
+    zIndex: 999999,
+    padding: "6px 10px",
+    fontSize: "14px",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    background: "white",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.15)"
+  });
 
-  select.parentNode.insertBefore(input, select.nextSibling);
-
-  input.addEventListener("input", () => {
-    const term = input.value.trim().toLowerCase();
-    const options = Array.from(select.options);
-    const matched = options.find(opt => 
-      (opt.textContent || "").toLowerCase().includes(term)
-    );
-    if (matched) {
-      select.value = matched.value;
-      select.dispatchEvent(new Event("change", { bubbles: true }));
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const term = input.value.trim();
+      if (term) {
+        trySelectByTerm(term);
+      }
     }
   });
+
+  document.body.appendChild(input);
 }
 
-function runSelectorInjection() {
-  const selectors = [
-    "select",                  // A 类型（普通 select）
-    ".custom-select select"    // B 类型（你可以替换成你实际系统的 class）
-  ];
+function trySelectByTerm(term) {
+  term = term.toLowerCase();
 
-  selectors.forEach(sel => {
-    const found = document.querySelectorAll(sel);
-    found.forEach(insertInputNextToSelect);
-  });
+  // Step 1: Find matching <option> in <optgroup>
+  const allOptions = Array.from(document.querySelectorAll("select option"));
+  const match = allOptions.find(opt => (opt.textContent || "").toLowerCase().includes(term));
+
+  if (!match) {
+    alert("見つかりません：" + term);
+    return;
+  }
+
+  const optgroup = match.parentElement.tagName === "OPTGROUP" ? match.parentElement : null;
+  const groupLabel = optgroup?.label || null;
+
+  // Step 2: Try to find parent select that contains optgroup.label
+  if (groupLabel) {
+    const parentSelects = Array.from(document.querySelectorAll("select"));
+    for (const sel of parentSelects) {
+      const options = Array.from(sel.options);
+      const foundGroup = Array.from(sel.querySelectorAll("optgroup")).find(g => g.label === groupLabel);
+      if (foundGroup) {
+        // Step 3: Select mother option if found
+        const idx = options.findIndex(opt => opt.textContent === groupLabel || opt.value === groupLabel);
+        if (idx !== -1) {
+          sel.selectedIndex = idx;
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+          // Wait for sub options to regenerate
+          setTimeout(() => {
+            selectSubItem(term);
+          }, 300);
+          return;
+        }
+      }
+    }
+  }
+
+  // Fallback: Try to select the matched child only
+  selectSubItem(term);
 }
 
-window.addEventListener("load", () => setTimeout(runSelectorInjection, 300));
+function selectSubItem(term) {
+  const selects = Array.from(document.querySelectorAll("select"));
+  for (const sel of selects) {
+    const idx = Array.from(sel.options).findIndex(opt => (opt.textContent || "").toLowerCase().includes(term));
+    if (idx !== -1) {
+      sel.selectedIndex = idx;
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+      break;
+    }
+  }
+}
+
+window.addEventListener("load", () => {
+  setTimeout(insertGlobalInput, 300);
+});
